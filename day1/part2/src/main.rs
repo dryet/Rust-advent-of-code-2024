@@ -17,12 +17,14 @@ fn main() {
         }
     }
 
-    right.sort();
-    left.sort();
-    let mut result: u32 = 0;
-    for (i, &val) in right.iter().enumerate() {
-        result += val.abs_diff(left[i]);
-    }
-    print!("{result}");
-    // Correct result is 1388114
+    let mut result: i32 = 0;
+    right.iter().for_each(|&x| {
+        left.iter().for_each(|&y| {
+            if x == y {
+                result += x
+            }
+        })
+    });
+
+    println!("{result}");
 }
