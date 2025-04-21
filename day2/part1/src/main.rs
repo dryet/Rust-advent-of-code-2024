@@ -6,7 +6,27 @@ fn main() {
     let file_path = &args[1];
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    let mut result: u32 = 0;
-    contents.split('\n').for_each(|x| { x.split(' ').collect::<Vec<_>>().windows(2).for_each( |x| if ); });
+    let mut result = 0;
 
+    for row_string in contents.split('\n') {
+        if row_string.is_empty() {
+            break;
+        }
+        let row: Vec<_> = row_string
+            .split(' ')
+            .map(|x| x.parse::<i32>().expect("Failed to parse to int"))
+            .collect();
+
+        if row
+            .windows(2)
+            .all(|a| a[0] < a[1] && a[0].abs_diff(a[1]) <= 3)
+            || row
+                .windows(2)
+                .all(|a| a[0] > a[1] && a[0].abs_diff(a[1]) <= 3)
+        {
+            result += 1;
+        }
+
+        println!("{result}"); // Result is 598
+    }
 }
