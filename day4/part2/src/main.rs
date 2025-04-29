@@ -1,74 +1,63 @@
 use std::env;
 use std::fs;
-use std::cmp;
+
+fn check_xmas(pos: (&usize, &usize), array: &Vec<&str>) -> bool {
+    let mut result: bool = false;
+    let mut diag1_vec = Vec::new();
+    diag1_vec.push(array[*pos.1 + 1].chars().nth(*pos.0 + 1).unwrap());
+    diag1_vec.push(array[*pos.1 - 1].chars().nth(*pos.0 - 1).unwrap());
+    diag1_vec.sort();
+    let mut diag2_vec = Vec::new();
+    diag2_vec.push(array[*pos.1 + 1].chars().nth(*pos.0 - 1).unwrap());
+    diag2_vec.push(array[*pos.1 - 1].chars().nth(*pos.0 + 1).unwrap());
+    diag2_vec.sort();
+    let diag1_string = diag1_vec.iter().fold(String::new(), |mut acc, x| {
+        acc.push(*x);
+        acc
+    });
+    let diag2_string = diag2_vec.iter().fold(String::new(), |mut acc, x| {
+        acc.push(*x);
+        acc
+    });
+    if diag1_string == "MS" && diag2_string == "MS" {
+        result = true;
+    }
+    result
+}
+
+fn check_boundary(pos: (&usize, &usize), row_cnt: usize, colomn_cnt: usize) -> bool {
+    let mut result: bool = true;
+    if [0, row_cnt - 1].contains(&pos.0) || [0, colomn_cnt - 1].contains(&pos.1) {
+        result = false;
+    }
+    result
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = &args[1];
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    let iter_rows = contents.split_ascii_whitespace();
+    let row_count: usize = contents.split_ascii_whitespace().nth(0).unwrap().len();
+    let column_count: usize = contents.split_ascii_whitespace().count();
 
-    let row_length: i32 = iter_rows.clone().nth(0).unwrap().chars().count().try_into().unwrap();
-    let column_length: i32 = iter_rows.clone().count().try_into().unwrap();
+    let arr_chars: Vec<&str> =
+        contents
+            .split_ascii_whitespace()
+            .fold(Vec::new(), |mut acc: Vec<&str>, y: &str| {
+                acc.push(y);
+                acc
+            });
 
-    let mut diagonal = String::new();
-    diagonal.push('\n');
-    for i in 0..(column_length + row_length - 1) {
-        for j in cmp::max(0, i - row_length + 1)..cmp::min(column_length, i + 1){
-            diagonal.push(iter_rows.clone().nth(j.try_into().unwrap()).unwrap().chars().nth((i-j).try_into().unwrap()).unwrap());
+    let result: usize = arr_chars.iter().enumerate().fold(0, |mut acc, y| {
+        for x in y.1.chars().enumerate() {
+            if x.1 == 'A' && check_boundary((&x.0, &y.0), row_count, column_count) {
+                if check_xmas((&x.0, &y.0), &arr_chars) {
+                    acc += 1;
+                }
+            }
         }
-        diagonal.push('\n');
-    }   
-
-    let diagonal_str = diagonal.as_str();
-    let diagonal_str_rev = &diagonal.chars().rev().collect::<String>(); 
-
-    let mut diagonal_rev = String::new();
-    let mut rows_rev = String::new();
-    rows_rev.push('\n');
-    for i in iter_rows {
-        rows_rev.push_str(&i.chars().rev().collect::<String>());
-        rows_rev.push('\n');
-    }
-    let iter_rows_rev = rows_rev.split_ascii_whitespace();
-
-    diagonal_rev.push('\n');
-    for i in 0..(column_length + row_length - 1) {
-        for j in cmp::max(0, i - row_length + 1)..cmp::min(column_length, i + 1){
-            diagonal_rev.push(iter_rows_rev.clone().nth(j.try_into().unwrap()).unwrap().chars().nth((i-j).try_into().unwrap()).unwrap());
-        }
-        diagonal_rev.push('\n');
-    }   
-
-    let diagonal_rev_str = diagonal_rev.as_str();
-    let diagonal_rev_str_rev = &diagonal_rev.chars().rev().collect::<String>(); 
-
-    let target = "MAS";
-
-    let mut pos_diagonal1 = Vec::new();
-    let mut pos_diagonal1_rev = Vec::new();
-    let mut pos_diagonal2 = Vec::new();
-    let mut pos_diagonal2_rev = Vec::new();
-    diagonal_str.as_bytes().windows(target.len()).enumerate().for_each(|x | if x.1 == target.as_bytes() {pos_diagonal1.push(x.0)});
-    diagonal_str_rev.as_bytes().windows(target.len()).enumerate().for_each(|x | if x.1 == target.as_bytes() {pos_diagonal1_rev.push(x.0)});
-    diagonal_rev_str.as_bytes().windows(target.len()).enumerate().for_each(|x | if x.1 == target.as_bytes() {pos_diagonal2.push(x.0)});
-    diagonal_rev_str_rev.as_bytes().windows(target.len()).enumerate().for_each(|x | if x.1 == target.as_bytes() {pos_diagonal2_rev.push(x.0)});
-
-    diagonal_str_rev.chars().for_each(|x| println!("{x}"));
-    pos_diagonal1_rev.iter().for_each(|&x| println!("{x}"));
-
-    let mut result: u32 = 0;
-    for i in pos_diagonal1{
-        if pos_diagonal2.contains(&i){
-            result += 1;
-        }
-    }
-    
-    for i in pos_diagonal1_rev{
-        if pos_diagonal2_rev.contains(&i){
-            result += 1;
-        }
-    }
+        acc
+    });
     println!("{result}");
 }
